@@ -98,7 +98,7 @@ ChipMachine::ChipMachine(utils::path const& wd, RemoteLoader& rl,
 {
 
     screen.setTitle("Chipmachine " VERSION_STR);
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
+    lua.open_libraries();
 #ifdef _WIN32
     lua["WINDOWS"] = true;
 #else
@@ -113,6 +113,17 @@ ChipMachine::ChipMachine(utils::path const& wd, RemoteLoader& rl,
                          std::string output = utils::execPipe(cmdPath.string());
                          return output;
                      });
+
+    // Append workdir to search path for Lua packages
+    std::string packagePath = lua["package"]["path"];
+    lua["package"]["path"] = (
+        packagePath + ";" +
+        (workDir / "lua" / "?.lua").string() + ";" +
+        (workDir / "lua" / "?" / "init.lua").string()
+    ).c_str();
+
+    lua["WORKDIR"] = workDir.string();
+    lua["CACHEDIR"] = Environment::getCacheDir().string();
 
     lua.script_file((workDir / "lua" / "init.lua").string());
 
@@ -347,6 +358,9 @@ void ChipMachine::layoutScreen()
     volPos = { ((float)screen.width() - ww) / 2.0f,
                ((float)screen.height() - hh) / 2.0f, ww, hh };
     volumeIcon.setArea(volPos);
+
+    // HACK: refresh init.lua here too
+    lua.script_file((workDir / "lua" / "init.lua").string());
 }
 
 void ChipMachine::play(SongInfo const& si)
@@ -496,6 +510,18 @@ void ChipMachine::update()
         }
 
         auto shot = currentInfo.metadata[SongInfo::SCREENSHOT];
+
+        lua["on_play_started"](lua.create_table_with(
+            "path", currentInfo.path, 
+            "game", currentInfo.game, 
+            "title", currentInfo.title, 
+            "composer", currentInfo.composer, 
+            "format", currentInfo.format, 
+            "numtunes", currentInfo.numtunes, 
+            "starttune", currentInfo.starttune,
+            "info", m, 
+            "screenshot", shot
+        ));
 
         if (shot != currentScreenshot) {
             screenShotIcon.clear();

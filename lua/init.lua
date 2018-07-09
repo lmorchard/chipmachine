@@ -1,4 +1,3 @@
-
 -- Given the link to a youtube URL, return an URL to an audio stream
 function on_parse_youtube (url)
 	result = cm_execute(string.format('youtube-dl --skip-download -g "%s"', url))
@@ -24,6 +23,10 @@ function on_layout (width, height, ppi)
 	-- print("LUA LAYOUT");
 end
 
+-- Called when a song starts playing
+function on_play_started (songInfo)
+    -- print("ON PLAY STARTED " .. songInfo.title);
+end
 
 function on_select_plugin (filename, plugins)
 	if string.find(filename, '.mod', 1, true) then
