@@ -1,3 +1,5 @@
+json = require "json"
+
 -- Given the link to a youtube URL, return an URL to an audio stream
 function on_parse_youtube (url)
 	result = cm_execute(string.format('youtube-dl --skip-download -g "%s"', url))
@@ -25,7 +27,10 @@ end
 
 -- Called when a song starts playing
 function on_play_started (songInfo)
-    -- print("ON PLAY STARTED " .. songInfo.title);
+    songInfoJson = json.encode(songInfo);
+    fout = io.open(CACHEDIR .. "/now_playing.json", "w");
+    fout:write(songInfoJson);
+    fout:close();
 end
 
 function on_select_plugin (filename, plugins)
