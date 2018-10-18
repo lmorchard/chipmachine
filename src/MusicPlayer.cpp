@@ -49,6 +49,10 @@ void MusicPlayer::update()
 
         sub_title = player->getMeta("sub_title");
         length = player->getMetaInt("length");
+        // HACK: Force a length of 3 minutes if we have zero length
+        if (length == 0) {
+            length = 180;
+        }
         message = player->getMeta("message");
         silent_frames = check_silence ? fifo.getSilence() : 0;
 
