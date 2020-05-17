@@ -70,9 +70,8 @@ void MusicPlayer::update()
                 break;
             }
             if (fadeout_pos != 0 && fadeout_pos >= play_pos) {
-                fifo.setVolume((fadeout_pos - play_pos) / (float)fade_length);
+                fifo.setVolume(std::min(0, fadeout_pos - play_pos) / (float)fade_length);
             }
-
             fifo.put(&temp_buf[0], samples_generated);
             if (fifo.filled() >= fifo.size() / 2) {
                 break;
@@ -226,6 +225,10 @@ void MusicPlayer::updatePlayingInfo()
     if (info.starttune == -1) info.starttune = 0;
 
     length = player->getMetaInt("length");
+    // HACK: Force a length of 3 minutes if we have zero length
+    if (length == 0) {
+        length = 180;
+    }
     message = player->getMeta("message");
     sub_title = player->getMeta("sub_title");
     playing_info = info;
